@@ -22,3 +22,8 @@ timeoutMs = 20000
 [[ports]]
 localPort = 8081
 externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+zernio-app-api = "sk_a2ce324d60aee6b507f67e1e11c1b421aff5d0ebbc974e4dc5c66b587d7428fa"
