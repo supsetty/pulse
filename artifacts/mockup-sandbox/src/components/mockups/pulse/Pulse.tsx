@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Heart,
@@ -29,6 +29,122 @@ import {
 
 type StatusKind = "live" | "connecting" | "failed";
 type NavKey = "home" | "analytics" | "recent" | "profile";
+
+type LivePost = {
+  id: string;
+  title: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  views: number;
+  when: string;
+};
+
+type LivePlatform = {
+  platform: "instagram" | "tiktok" | "x" | "youtube";
+  handle: string;
+  total_score: number;
+  new_activity_flag: boolean;
+  stats: {
+    reach: number;
+    engagement_rate: number;
+    growth: number;
+    followers: number;
+  };
+  posts: LivePost[];
+};
+
+type PulseResponse = {
+  status: "ok";
+  fetched_at: string;
+  source: string;
+  platforms: LivePlatform[];
+};
+
+const PLATFORM_TO_APP_ID: Record<string, string> = {
+  instagram: "ig",
+  tiktok: "tt",
+  x: "x",
+  youtube: "yt",
+};
+
+// Map fetched data into a lookup keyed by frontend app id.
+function indexByAppId(data: PulseResponse | null): Record<string, LivePlatform> {
+  if (!data) return {};
+  const out: Record<string, LivePlatform> = {};
+  for (const p of data.platforms) {
+    const appId = PLATFORM_TO_APP_ID[p.platform];
+    if (appId) out[appId] = p;
+  }
+  return out;
+}
+
+// API_URL — relative path so it works through the workspace proxy in dev.
+// In production a full origin can be substituted via env.
+const PULSE_API_URL = "/api/pulse";
+const POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes per spec
+const BLINK_DURATION_MS = 1600;
+
+function usePulseData() {
+  const [data, setData] = useState<PulseResponse | null>(null);
+  const [status, setStatus] = useState<StatusKind>("connecting");
+  const [blinkSet, setBlinkSet] = useState<Set<string>>(new Set());
+  const prevScoresRef = useRef<Record<string, number>>({});
+  const blinkTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const refresh = useCallback(async () => {
+    setStatus("connecting");
+    try {
+      const res = await fetch(PULSE_API_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json: PulseResponse = await res.json();
+      // Compare scores per platform; trigger blink for any that grew.
+      const newBlinks = new Set<string>();
+      for (const p of json.platforms) {
+        const appId = PLATFORM_TO_APP_ID[p.platform];
+        if (!appId) continue;
+        const prev = prevScoresRef.current[appId];
+        if (prev !== undefined && p.total_score > prev) {
+          newBlinks.add(appId);
+        }
+        prevScoresRef.current[appId] = p.total_score;
+      }
+      if (newBlinks.size > 0) {
+        setBlinkSet((cur) => {
+          const next = new Set(cur);
+          newBlinks.forEach((id) => next.add(id));
+          return next;
+        });
+        newBlinks.forEach((id) => {
+          if (blinkTimers.current[id]) clearTimeout(blinkTimers.current[id]);
+          blinkTimers.current[id] = setTimeout(() => {
+            setBlinkSet((cur) => {
+              const next = new Set(cur);
+              next.delete(id);
+              return next;
+            });
+          }, BLINK_DURATION_MS);
+        });
+      }
+      setData(json);
+      setStatus("live");
+    } catch (err) {
+      console.warn("[pulse] fetch failed:", err);
+      setStatus("failed");
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const t = setInterval(refresh, POLL_INTERVAL_MS);
+    return () => {
+      clearInterval(t);
+      Object.values(blinkTimers.current).forEach((id) => clearTimeout(id));
+    };
+  }, [refresh]);
+
+  return { data, status, blinkSet, refresh };
+}
 
 type AppData = {
   id: string;
@@ -289,11 +405,17 @@ function Blob({
   score,
   onClick,
   showBubble,
+  blink = false,
+  liveLikes,
+  liveComments,
 }: {
   app: AppData;
   score: number;
   onClick: () => void;
   showBubble: boolean;
+  blink?: boolean;
+  liveLikes?: number;
+  liveComments?: number;
 }) {
   const cells = useMemo(() => growShape(app.shape, score), [app, score]);
 
@@ -313,8 +435,34 @@ function Blob({
   const blobLeft = (app.origin.x + minX) * (CELL + GAP);
   const blobTop = (app.origin.y + minY) * (CELL + GAP);
 
+  const likes = liveLikes ?? app.likes;
+  const comments = liveComments ?? app.comments;
+
   return (
     <>
+      {/* blink ring — expanding outline around the territory border */}
+      <AnimatePresence>
+        {blink && (
+          <motion.div
+            key={`blink-${app.id}`}
+            initial={{ opacity: 0.85, scale: 0.96 }}
+            animate={{ opacity: 0, scale: 1.18 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.4, ease: "easeOut" }}
+            className="absolute pointer-events-none z-10"
+            style={{
+              left: blobLeft - 6,
+              top: blobTop - 6,
+              width: widthPx + 12,
+              height: heightPx + 12,
+              border: `2px solid ${app.color}`,
+              borderRadius: 14,
+              boxShadow: `0 0 22px ${app.color}`,
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       <div
         className="absolute cursor-pointer"
         style={{ left: blobLeft, top: blobTop, width: widthPx, height: heightPx }}
@@ -395,7 +543,7 @@ function Blob({
                   className="text-[11px] font-semibold tracking-wider"
                   style={{ fontFamily: "ui-monospace, monospace", color: INK }}
                 >
-                  {app.likes.toLocaleString()}
+                  {likes.toLocaleString()}
                 </span>
               </div>
               <div className="w-px h-3 bg-black/15" />
@@ -405,7 +553,7 @@ function Blob({
                   className="text-[11px] font-semibold tracking-wider"
                   style={{ fontFamily: "ui-monospace, monospace", color: INK }}
                 >
-                  {app.comments.toLocaleString()}
+                  {comments.toLocaleString()}
                 </span>
               </div>
             </div>
@@ -548,13 +696,25 @@ function AddBlob({ origin, onClick }: { origin: { x: number; y: number }; onClic
   );
 }
 
-function StatusIndicator({ status }: { status: StatusKind }) {
+function StatusIndicator({
+  status,
+  onClick,
+}: {
+  status: StatusKind;
+  onClick?: () => void;
+}) {
   const dot =
     status === "live" ? "#22C55E" : status === "connecting" ? "#3B82F6" : "#EF4444";
   const label =
     status === "live" ? "LIVE" : status === "connecting" ? "SYNC" : "FAIL";
+  const pulseDuration = status === "connecting" ? 0.7 : 1.4;
   return (
-    <div className="flex items-center gap-2">
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2"
+      data-testid="status-indicator"
+      title="Tap to re-sync"
+    >
       <span
         className="text-[9px] tracking-[0.2em] text-white/60"
         style={{ fontFamily: "ui-monospace, monospace" }}
@@ -566,17 +726,20 @@ function StatusIndicator({ status }: { status: StatusKind }) {
         style={{
           width: 28,
           height: 28,
-          border: "1px solid rgba(255,255,255,0.25)",
+          border: `1px solid ${
+            status === "failed" ? "rgba(239,68,68,0.45)" : "rgba(255,255,255,0.25)"
+          }`,
         }}
       >
         <motion.div
+          key={status}
           className="rounded-full"
           style={{ width: 8, height: 8, background: dot }}
           animate={{ opacity: [1, 0.4, 1] }}
-          transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: pulseDuration, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -586,12 +749,14 @@ function PageHeader({
   italic,
   subtitle,
   status,
+  onStatusClick,
 }: {
   eyebrow: string;
   title: string;
   italic?: string;
   subtitle: string;
   status: StatusKind;
+  onStatusClick?: () => void;
 }) {
   return (
     <div className="relative z-10 px-6 pt-12 pb-5">
@@ -602,7 +767,7 @@ function PageHeader({
         >
           {eyebrow}
         </div>
-        <StatusIndicator status={status} />
+        <StatusIndicator status={status} onClick={onStatusClick} />
       </div>
       <h1
         className="text-white text-[40px] leading-[1.05] tracking-tight"
@@ -680,9 +845,11 @@ function BottomNav({
 function Drawer({
   app,
   onClose,
+  livePosts,
 }: {
   app: AppData | null;
   onClose: () => void;
+  livePosts?: LivePost[];
 }) {
   return (
     <AnimatePresence>
@@ -760,9 +927,18 @@ function Drawer({
                 className="flex-1 overflow-y-auto px-5 pt-2 pb-6"
               >
                 <div className="flex flex-col gap-2.5">
-                  {app.posts.map((p, i) => (
+                  {(livePosts && livePosts.length > 0
+                    ? livePosts.map((lp, i) => ({
+                        title: lp.title,
+                        views: lp.views,
+                        shares: lp.shares,
+                        when: lp.when,
+                        tone: app.posts[i % app.posts.length]?.tone ?? app.color,
+                      }))
+                    : app.posts
+                  ).map((p, i) => (
                     <motion.div
-                      key={p.title}
+                      key={`${p.title}-${i}`}
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.05, duration: 0.3 }}
@@ -855,14 +1031,18 @@ function Drawer({
 
 function HomePage({
   status,
-  engagementScore,
   username,
   onAddChannel,
+  liveByApp,
+  blinkSet,
+  onStatusClick,
 }: {
   status: StatusKind;
-  engagementScore: number;
   username: string;
   onAddChannel: () => void;
+  liveByApp: Record<string, LivePlatform>;
+  blinkSet: Set<string>;
+  onStatusClick: () => void;
 }) {
   const [activeBlobId, setActiveBlobId] = useState<string | null>(null);
   const [drawerAppId, setDrawerAppId] = useState<string | null>(null);
@@ -893,6 +1073,7 @@ function HomePage({
         italic="Returns."
         subtitle="engagement is pretty better than yesterday."
         status={status}
+        onStatusClick={onStatusClick}
       />
 
       <div
@@ -925,15 +1106,17 @@ function HomePage({
           </div>
 
           {APPS.map((app) => {
-            const localScore =
-              app.id === "ig" ? engagementScore : app.baseScore;
+            const live = liveByApp[app.id];
             return (
               <Blob
                 key={app.id}
                 app={app}
-                score={localScore}
+                score={app.baseScore}
                 onClick={() => handleBlobClick(app.id)}
                 showBubble={activeBlobId === app.id}
+                blink={blinkSet.has(app.id)}
+                liveLikes={live?.posts.reduce((s, p) => s + p.likes, 0)}
+                liveComments={live?.posts.reduce((s, p) => s + p.comments, 0)}
               />
             );
           })}
@@ -942,7 +1125,11 @@ function HomePage({
         </div>
       </div>
 
-      <Drawer app={drawerApp} onClose={closeAll} />
+      <Drawer
+        app={drawerApp}
+        onClose={closeAll}
+        livePosts={drawerApp ? liveByApp[drawerApp.id]?.posts : undefined}
+      />
     </>
   );
 }
@@ -1156,7 +1343,13 @@ function AnalyticsCard({ app }: { app: AppData }) {
   );
 }
 
-function AnalyticsPage({ status }: { status: StatusKind }) {
+function AnalyticsPage({
+  status,
+  onStatusClick,
+}: {
+  status: StatusKind;
+  onStatusClick?: () => void;
+}) {
   return (
     <>
       <PageHeader
@@ -1165,6 +1358,7 @@ function AnalyticsPage({ status }: { status: StatusKind }) {
         italic="Index."
         subtitle="reach, demographics & geo per channel."
         status={status}
+        onStatusClick={onStatusClick}
       />
       <div
         className="absolute left-0 right-0 overflow-y-auto"
@@ -1187,7 +1381,13 @@ function AnalyticsPage({ status }: { status: StatusKind }) {
 
 /* ---------------- RECENTS ---------------- */
 
-function RecentsPage({ status }: { status: StatusKind }) {
+function RecentsPage({
+  status,
+  onStatusClick,
+}: {
+  status: StatusKind;
+  onStatusClick?: () => void;
+}) {
   const allPosts = useMemo(() => {
     const items = APPS.flatMap((app) =>
       app.posts.map((p) => ({
@@ -1212,6 +1412,7 @@ function RecentsPage({ status }: { status: StatusKind }) {
         italic="Drops."
         subtitle="last upload performance, freshest first."
         status={status}
+        onStatusClick={onStatusClick}
       />
       <div
         className="absolute left-0 right-0 overflow-y-auto"
@@ -1350,10 +1551,12 @@ function ProfilePage({
   status,
   username,
   onResetOnboarding,
+  onStatusClick,
 }: {
   status: StatusKind;
   username: string;
   onResetOnboarding: () => void;
+  onStatusClick?: () => void;
 }) {
   const totalFollowers = APPS.reduce((s, a) => s + a.followers, 0);
   const avgEng = (APPS.reduce((s, a) => s + a.engagementRate, 0) / APPS.length).toFixed(1);
@@ -1376,6 +1579,7 @@ function ProfilePage({
         italic="Setty."
         subtitle="creator account & connected channels."
         status={status}
+        onStatusClick={onStatusClick}
       />
       <div
         className="absolute left-0 right-0 overflow-y-auto"
@@ -1910,32 +2114,13 @@ function Onboarding({
 
 export function Pulse() {
   const [activeNav, setActiveNav] = useState<NavKey>("home");
-  const [engagementScore, setEngagementScore] = useState(85);
-  const [status, setStatus] = useState<StatusKind>("live");
   const [onboarded, setOnboarded] = useState(false);
   const [onboardStep, setOnboardStep] = useState(0);
   const [username, setUsername] = useState("@hitha");
   const [connected, setConnected] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const t = setInterval(() => {
-      setEngagementScore((s) => {
-        const next = s + (Math.random() > 0.5 ? 5 : 0);
-        return next > 160 ? 70 : next;
-      });
-    }, 2400);
-    return () => clearInterval(t);
-  }, []);
-
-  useEffect(() => {
-    const cycle: StatusKind[] = ["live", "live", "live", "connecting", "live"];
-    let i = 0;
-    const t = setInterval(() => {
-      i = (i + 1) % cycle.length;
-      setStatus(cycle[i]);
-    }, 4500);
-    return () => clearInterval(t);
-  }, []);
+  const { data: liveData, status, blinkSet, refresh } = usePulseData();
+  const liveByApp = useMemo(() => indexByAppId(liveData), [liveData]);
 
   const handleOnboardDone = (u: string, c: Set<string>) => {
     setUsername(u);
@@ -1983,18 +2168,25 @@ export function Pulse() {
                 {activeNav === "home" && (
                   <HomePage
                     status={status}
-                    engagementScore={engagementScore}
                     username={username}
                     onAddChannel={openConnectStep}
+                    liveByApp={liveByApp}
+                    blinkSet={blinkSet}
+                    onStatusClick={refresh}
                   />
                 )}
-                {activeNav === "analytics" && <AnalyticsPage status={status} />}
-                {activeNav === "recent" && <RecentsPage status={status} />}
+                {activeNav === "analytics" && (
+                  <AnalyticsPage status={status} onStatusClick={refresh} />
+                )}
+                {activeNav === "recent" && (
+                  <RecentsPage status={status} onStatusClick={refresh} />
+                )}
                 {activeNav === "profile" && (
                   <ProfilePage
                     status={status}
                     username={username}
                     onResetOnboarding={replayOnboarding}
+                    onStatusClick={refresh}
                   />
                 )}
               </motion.div>
