@@ -17,6 +17,14 @@ import {
   Link2,
   Shield,
   ChevronRight,
+  Instagram,
+  Twitter,
+  Youtube,
+  Music2,
+  Plus,
+  ArrowRight,
+  ArrowLeft,
+  Check,
 } from "lucide-react";
 
 type StatusKind = "live" | "connecting" | "failed";
@@ -39,7 +47,6 @@ type AppData = {
     when: string;
     tone: string;
   }>;
-  // analytics
   reach: number;
   engagementRate: number;
   growth: number;
@@ -56,6 +63,13 @@ const PINK = "#E5B9B9";
 const CREAM = "#FDFCF5";
 const INK = "#0A0A0A";
 
+const ICONS: Record<string, typeof Instagram> = {
+  ig: Instagram,
+  x: Twitter,
+  tt: Music2,
+  yt: Youtube,
+};
+
 const APPS: AppData[] = [
   {
     id: "ig",
@@ -63,7 +77,7 @@ const APPS: AppData[] = [
     app: "INSTAGRAM",
     color: PINK,
     baseScore: 85,
-    origin: { x: 4, y: 6 },
+    origin: { x: 4, y: 4 },
     shape: [
       [0, 0], [1, 0], [2, 0], [3, 0],
       [0, 1], [1, 1], [2, 1], [3, 1], [4, 1],
@@ -98,50 +112,12 @@ const APPS: AppData[] = [
     ],
   },
   {
-    id: "x",
-    handle: "@hitha.codes",
-    app: "X / TWITTER",
-    color: "#C9D1D9",
-    baseScore: 60,
-    origin: { x: 22, y: 4 },
-    shape: [
-      [0, 0], [1, 0], [2, 0],
-      [-1, 1], [0, 1], [1, 1], [2, 1], [3, 1],
-      [0, 2], [1, 2], [2, 2], [3, 2],
-      [1, 3], [2, 3],
-      [1, 4], [2, 4], [3, 4],
-    ],
-    likes: 642,
-    comments: 84,
-    posts: [
-      { title: "Thread — design systems", views: 18204, shares: 302, when: "3h ago", tone: "#C9D1D9" },
-      { title: "Quote — taste vs craft", views: 9412, shares: 145, when: "11h ago", tone: "#A8B2BC" },
-      { title: "Reply — to @figma", views: 2204, shares: 12, when: "1d ago", tone: "#C9D1D9" },
-    ],
-    reach: 92140,
-    engagementRate: 4.1,
-    growth: -2.8,
-    followers: 8420,
-    spark: [22, 18, 16, 14, 18, 12, 14],
-    ageGroups: [
-      { label: "18-24", value: 18 },
-      { label: "25-34", value: 52 },
-      { label: "35-44", value: 22 },
-      { label: "45+", value: 8 },
-    ],
-    regions: [
-      { label: "US — SF", value: 34 },
-      { label: "IN — Bengaluru", value: 21 },
-      { label: "DE — Berlin", value: 9 },
-    ],
-  },
-  {
     id: "tt",
     handle: "@hitha.tt",
     app: "TIKTOK",
     color: "#E8D5A8",
     baseScore: 110,
-    origin: { x: 36, y: 9 },
+    origin: { x: 38, y: 4 },
     shape: [
       [0, 0], [1, 0], [2, 0], [3, 0], [4, 0],
       [-1, 1], [0, 1], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1],
@@ -177,12 +153,50 @@ const APPS: AppData[] = [
     ],
   },
   {
+    id: "x",
+    handle: "@hitha.codes",
+    app: "X / TWITTER",
+    color: "#C9D1D9",
+    baseScore: 60,
+    origin: { x: 24, y: 22 },
+    shape: [
+      [0, 0], [1, 0], [2, 0],
+      [-1, 1], [0, 1], [1, 1], [2, 1], [3, 1],
+      [0, 2], [1, 2], [2, 2], [3, 2],
+      [1, 3], [2, 3],
+      [1, 4], [2, 4], [3, 4],
+    ],
+    likes: 642,
+    comments: 84,
+    posts: [
+      { title: "Thread — design systems", views: 18204, shares: 302, when: "3h ago", tone: "#C9D1D9" },
+      { title: "Quote — taste vs craft", views: 9412, shares: 145, when: "11h ago", tone: "#A8B2BC" },
+      { title: "Reply — to @figma", views: 2204, shares: 12, when: "1d ago", tone: "#C9D1D9" },
+    ],
+    reach: 92140,
+    engagementRate: 4.1,
+    growth: -2.8,
+    followers: 8420,
+    spark: [22, 18, 16, 14, 18, 12, 14],
+    ageGroups: [
+      { label: "18-24", value: 18 },
+      { label: "25-34", value: 52 },
+      { label: "35-44", value: 22 },
+      { label: "45+", value: 8 },
+    ],
+    regions: [
+      { label: "US — SF", value: 34 },
+      { label: "IN — Bengaluru", value: 21 },
+      { label: "DE — Berlin", value: 9 },
+    ],
+  },
+  {
     id: "yt",
     handle: "@hitha.yt",
     app: "YOUTUBE",
     color: "#D4A5A5",
     baseScore: 45,
-    origin: { x: 56, y: 5 },
+    origin: { x: 60, y: 22 },
     shape: [
       [0, 0], [1, 0], [2, 0],
       [0, 1], [1, 1], [2, 1], [3, 1],
@@ -253,6 +267,23 @@ function growShape(base: Array<[number, number]>, score: number): Array<[number,
   return cells;
 }
 
+function AppLogo({ app, size = 18 }: { app: AppData; size?: number }) {
+  const Icon = ICONS[app.id] ?? Instagram;
+  return (
+    <div
+      className="flex items-center justify-center"
+      style={{
+        width: size,
+        height: size,
+        background: app.color,
+        borderRadius: Math.max(4, size / 4),
+      }}
+    >
+      <Icon size={Math.round(size * 0.62)} strokeWidth={2} color={INK} />
+    </div>
+  );
+}
+
 function Blob({
   app,
   score,
@@ -321,20 +352,12 @@ function Blob({
         })}
       </div>
 
-      {/* label */}
+      {/* label with app logo */}
       <div
         className="absolute pointer-events-none flex items-center gap-1.5"
         style={{ left: labelLeft, top: labelTop }}
       >
-        <div
-          className="rounded-full"
-          style={{
-            width: 12,
-            height: 12,
-            background: app.color,
-            border: "1.5px solid #1a1a1a",
-          }}
-        />
+        <AppLogo app={app} size={16} />
         <span
           className="text-[10px] tracking-wider"
           style={{
@@ -347,7 +370,6 @@ function Blob({
         </span>
       </div>
 
-      {/* Message bubble */}
       <AnimatePresence>
         {showBubble && (
           <motion.div
@@ -387,7 +409,6 @@ function Blob({
                 </span>
               </div>
             </div>
-            {/* tail */}
             <div
               className="absolute left-1/2 -translate-x-1/2"
               style={{
@@ -402,6 +423,127 @@ function Blob({
           </motion.div>
         )}
       </AnimatePresence>
+    </>
+  );
+}
+
+function AddBlob({ origin, onClick }: { origin: { x: number; y: number }; onClick: () => void }) {
+  // 5x5 grid square, soft pink tint, with a white plus in the center
+  const SIZE = 5;
+  const cells: Array<[number, number]> = [];
+  for (let x = 0; x < SIZE; x++) {
+    for (let y = 0; y < SIZE; y++) {
+      cells.push([x, y]);
+    }
+  }
+  const widthPx = SIZE * (CELL + GAP);
+  const heightPx = SIZE * (CELL + GAP);
+  const blobLeft = origin.x * (CELL + GAP);
+  const blobTop = origin.y * (CELL + GAP);
+  const labelLeft = blobLeft;
+  const labelTop = blobTop + heightPx + 8;
+
+  return (
+    <>
+      <motion.div
+        className="absolute cursor-pointer"
+        style={{ left: blobLeft, top: blobTop, width: widthPx, height: heightPx }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+        whileHover={{ scale: 1.04 }}
+        whileTap={{ scale: 0.96 }}
+        data-testid="blob-add"
+      >
+        {cells.map(([x, y], i) => {
+          const cx = x * (CELL + GAP);
+          const cy = y * (CELL + GAP);
+          const delay = ((i * 53) % 1000) / 1000;
+          return (
+            <motion.div
+              key={`${x}-${y}`}
+              className="absolute"
+              style={{
+                left: cx,
+                top: cy,
+                width: CELL,
+                height: CELL,
+                background: "rgba(229,185,185,0.55)",
+                border: "1px dashed rgba(0,0,0,0.18)",
+                borderRadius: 4,
+              }}
+              animate={{ scale: [1, 1.04, 1] }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay,
+              }}
+            />
+          );
+        })}
+        {/* white plus mark in the center */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 30,
+            height: 30,
+          }}
+        >
+          <div
+            className="absolute"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 24,
+              height: 4,
+              background: "white",
+              borderRadius: 2,
+              boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
+            }}
+          />
+          <div
+            className="absolute"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 4,
+              height: 24,
+              background: "white",
+              borderRadius: 2,
+              boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
+            }}
+          />
+        </div>
+      </motion.div>
+
+      <div
+        className="absolute pointer-events-none flex items-center gap-1.5"
+        style={{ left: labelLeft, top: labelTop }}
+      >
+        <div
+          className="rounded-sm flex items-center justify-center"
+          style={{ width: 16, height: 16, background: "rgba(0,0,0,0.06)", borderRadius: 4 }}
+        >
+          <Plus className="w-2.5 h-2.5" style={{ color: INK }} strokeWidth={2.4} />
+        </div>
+        <span
+          className="text-[10px] tracking-wider"
+          style={{
+            color: "#1a1a1a",
+            fontFamily: "ui-monospace, 'JetBrains Mono', monospace",
+            letterSpacing: "0.08em",
+          }}
+        >
+          add channel
+        </span>
+      </div>
     </>
   );
 }
@@ -575,10 +717,7 @@ function Drawer({
 
             <div className="px-5 pt-3 pb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div
-                  className="rounded-sm"
-                  style={{ width: 10, height: 10, background: app.color }}
-                />
+                <AppLogo app={app} size={16} />
                 <span
                   className="text-[10px] font-semibold tracking-[0.18em]"
                   style={{ fontFamily: "ui-monospace, monospace", color: INK }}
@@ -717,9 +856,13 @@ function Drawer({
 function HomePage({
   status,
   engagementScore,
+  username,
+  onAddChannel,
 }: {
   status: StatusKind;
   engagementScore: number;
+  username: string;
+  onAddChannel: () => void;
 }) {
   const [activeBlobId, setActiveBlobId] = useState<string | null>(null);
   const [drawerAppId, setDrawerAppId] = useState<string | null>(null);
@@ -739,11 +882,14 @@ function HomePage({
   const CANVAS_WIDTH = 1100;
   const CANVAS_HEIGHT = 560;
 
+  const firstName = username.replace(/^@/, "").split(/[._]/)[0] || "Hitha";
+  const display = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+
   return (
     <>
       <PageHeader
         eyebrow="PULSE / 04.28"
-        title="Hitha"
+        title={display}
         italic="Returns."
         subtitle="engagement is pretty better than yesterday."
         status={status}
@@ -762,7 +908,6 @@ function HomePage({
             minHeight: CANVAS_HEIGHT,
             height: "100%",
             background: CREAM,
-            borderTopLeftRadius: 60,
             backgroundImage:
               "radial-gradient(circle, rgba(0,0,0,0.13) 1px, transparent 1px)",
             backgroundSize: `${CELL + GAP}px ${CELL + GAP}px`,
@@ -792,6 +937,8 @@ function HomePage({
               />
             );
           })}
+
+          <AddBlob origin={{ x: 12, y: 24 }} onClick={onAddChannel} />
         </div>
       </div>
 
@@ -843,13 +990,9 @@ function AnalyticsCard({ app }: { app: AppData }) {
         backgroundSize: `${CELL + GAP}px ${CELL + GAP}px`,
       }}
     >
-      {/* header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div
-            className="rounded"
-            style={{ width: 18, height: 18, background: app.color, borderRadius: 5 }}
-          />
+          <AppLogo app={app} size={22} />
           <div>
             <div
               className="text-[10px] tracking-[0.18em] font-semibold"
@@ -889,7 +1032,6 @@ function AnalyticsCard({ app }: { app: AppData }) {
         </div>
       </div>
 
-      {/* perf row */}
       <div className="flex items-end justify-between mb-3 pb-3 border-b border-black/5">
         <div className="flex flex-col gap-2">
           <div>
@@ -944,7 +1086,6 @@ function AnalyticsCard({ app }: { app: AppData }) {
         <Sparkline data={app.spark} color={INK} />
       </div>
 
-      {/* demographics */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <div
@@ -1080,7 +1221,6 @@ function RecentsPage({ status }: { status: StatusKind }) {
           className="relative pt-6 pb-32 px-5"
           style={{
             background: CREAM,
-            borderTopLeftRadius: 60,
             minHeight: "100%",
             backgroundImage:
               "radial-gradient(circle, rgba(0,0,0,0.10) 1px, transparent 1px)",
@@ -1094,113 +1234,109 @@ function RecentsPage({ status }: { status: StatusKind }) {
             LIVE_FEED — {allPosts.length} ASSETS
           </div>
 
-          {/* card stack */}
           <div className="flex flex-col gap-2.5">
-            {allPosts.map((p, i) => (
-              <motion.div
-                key={`${p.appId}-${p.title}`}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.04, duration: 0.3 }}
-                className="relative"
-                style={{
-                  background: "white",
-                  borderRadius: 14,
-                  padding: 12,
-                  border: "1px solid rgba(0,0,0,0.06)",
-                  boxShadow: "0 2px 0 rgba(0,0,0,0.03)",
-                  marginLeft: (i % 3) * 6,
-                }}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className="flex-shrink-0 relative overflow-hidden"
-                    style={{
-                      width: 56,
-                      height: 56,
-                      background: p.tone,
-                      borderRadius: 10,
-                    }}
-                  >
+            {allPosts.map((p, i) => {
+              const Icon = ICONS[p.appId] ?? Instagram;
+              return (
+                <motion.div
+                  key={`${p.appId}-${p.title}`}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.04, duration: 0.3 }}
+                  className="relative"
+                  style={{
+                    background: "white",
+                    borderRadius: 14,
+                    padding: 12,
+                    border: "1px solid rgba(0,0,0,0.06)",
+                    boxShadow: "0 2px 0 rgba(0,0,0,0.03)",
+                    marginLeft: (i % 3) * 6,
+                  }}
+                >
+                  <div className="flex items-start gap-3">
                     <div
-                      className="absolute inset-0"
+                      className="flex-shrink-0 relative overflow-hidden"
                       style={{
-                        background:
-                          "linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.35) 50%, transparent 60%)",
+                        width: 56,
+                        height: 56,
+                        background: p.tone,
+                        borderRadius: 10,
                       }}
-                    />
-                    <div
-                      className="absolute bottom-1 left-1 right-1 text-[7px] tracking-[0.2em] text-white/90 font-semibold"
-                      style={{ fontFamily: "ui-monospace, monospace" }}
                     >
-                      {p.app.split(" ")[0]}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
                       <div
-                        className="rounded-full"
-                        style={{ width: 6, height: 6, background: p.color }}
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.35) 50%, transparent 60%)",
+                        }}
                       />
-                      <span
-                        className="text-[9px] tracking-[0.18em] opacity-55"
-                        style={{ fontFamily: "ui-monospace, monospace", color: INK }}
-                      >
-                        {p.handle}
-                      </span>
-                      <div className="flex-1" />
-                      <span
-                        className="text-[9px] tracking-[0.18em] opacity-45"
-                        style={{ fontFamily: "ui-monospace, monospace", color: INK }}
-                      >
-                        {p.when.toUpperCase()}
-                      </span>
+                      <div className="absolute bottom-1 left-1">
+                        <Icon className="w-3 h-3 text-white/90" strokeWidth={2.2} />
+                      </div>
                     </div>
-                    <div
-                      className="text-[12px] font-semibold mb-2 truncate"
-                      style={{ color: INK, fontFamily: "ui-monospace, monospace" }}
-                    >
-                      {p.title}
-                    </div>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {[
-                        { icon: Eye, val: p.views, label: "VIEWS" },
-                        { icon: Heart, val: p.likes, label: "LIKES" },
-                        { icon: MessageCircle, val: p.comments, label: "CMTS" },
-                        { icon: Share2, val: p.shares, label: "SHRS" },
-                      ].map(({ icon: Icon, val, label }) => (
-                        <div
-                          key={label}
-                          className="flex flex-col items-start"
-                          style={{
-                            background: "rgba(0,0,0,0.03)",
-                            borderRadius: 6,
-                            padding: "4px 6px",
-                          }}
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <AppLogo app={APPS.find((a) => a.id === p.appId)!} size={12} />
+                        <span
+                          className="text-[9px] tracking-[0.18em] opacity-55"
+                          style={{ fontFamily: "ui-monospace, monospace", color: INK }}
                         >
-                          <div className="flex items-center gap-1 opacity-55 mb-0.5">
-                            <Icon className="w-2.5 h-2.5" style={{ color: INK }} />
+                          {p.handle}
+                        </span>
+                        <div className="flex-1" />
+                        <span
+                          className="text-[9px] tracking-[0.18em] opacity-45"
+                          style={{ fontFamily: "ui-monospace, monospace", color: INK }}
+                        >
+                          {p.when.toUpperCase()}
+                        </span>
+                      </div>
+                      <div
+                        className="text-[12px] font-semibold mb-2 truncate"
+                        style={{ color: INK, fontFamily: "ui-monospace, monospace" }}
+                      >
+                        {p.title}
+                      </div>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {[
+                          { icon: Eye, val: p.views, label: "VIEWS" },
+                          { icon: Heart, val: p.likes, label: "LIKES" },
+                          { icon: MessageCircle, val: p.comments, label: "CMTS" },
+                          { icon: Share2, val: p.shares, label: "SHRS" },
+                        ].map(({ icon: Icon2, val, label }) => (
+                          <div
+                            key={label}
+                            className="flex flex-col items-start"
+                            style={{
+                              background: "rgba(0,0,0,0.03)",
+                              borderRadius: 6,
+                              padding: "4px 6px",
+                            }}
+                          >
+                            <div className="flex items-center gap-1 opacity-55 mb-0.5">
+                              <Icon2 className="w-2.5 h-2.5" style={{ color: INK }} />
+                              <span
+                                className="text-[7px] tracking-[0.18em]"
+                                style={{ fontFamily: "ui-monospace, monospace", color: INK }}
+                              >
+                                {label}
+                              </span>
+                            </div>
                             <span
-                              className="text-[7px] tracking-[0.18em]"
+                              className="text-[10px] font-semibold"
                               style={{ fontFamily: "ui-monospace, monospace", color: INK }}
                             >
-                              {label}
+                              {val >= 1000 ? `${(val / 1000).toFixed(1)}K` : val}
                             </span>
                           </div>
-                          <span
-                            className="text-[10px] font-semibold"
-                            style={{ fontFamily: "ui-monospace, monospace", color: INK }}
-                          >
-                            {val >= 1000 ? `${(val / 1000).toFixed(1)}K` : val}
-                          </span>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1210,22 +1346,33 @@ function RecentsPage({ status }: { status: StatusKind }) {
 
 /* ---------------- PROFILE ---------------- */
 
-function ProfilePage({ status }: { status: StatusKind }) {
+function ProfilePage({
+  status,
+  username,
+  onResetOnboarding,
+}: {
+  status: StatusKind;
+  username: string;
+  onResetOnboarding: () => void;
+}) {
   const totalFollowers = APPS.reduce((s, a) => s + a.followers, 0);
   const avgEng = (APPS.reduce((s, a) => s + a.engagementRate, 0) / APPS.length).toFixed(1);
 
   const settings = [
-    { icon: Bell, label: "NOTIFICATIONS", meta: "ON" },
-    { icon: Link2, label: "CONNECTED_ACCOUNTS", meta: `${APPS.length}` },
-    { icon: Shield, label: "PRIVACY", meta: "STANDARD" },
-    { icon: Settings2, label: "PREFERENCES", meta: "" },
+    { icon: Bell, label: "NOTIFICATIONS", meta: "ON", action: () => {} },
+    { icon: Link2, label: "CONNECTED_ACCOUNTS", meta: `${APPS.length}`, action: () => {} },
+    { icon: Shield, label: "PRIVACY", meta: "STANDARD", action: () => {} },
+    { icon: Settings2, label: "REPLAY_ONBOARDING", meta: "", action: onResetOnboarding },
   ];
+
+  const firstName = username.replace(/^@/, "").split(/[._]/)[0] || "Hitha";
+  const display = firstName.charAt(0).toUpperCase() + firstName.slice(1);
 
   return (
     <>
       <PageHeader
         eyebrow="PROFILE / OPERATOR"
-        title="Hitha"
+        title={display}
         italic="Setty."
         subtitle="creator account & connected channels."
         status={status}
@@ -1238,7 +1385,6 @@ function ProfilePage({ status }: { status: StatusKind }) {
           className="relative pt-6 pb-32 px-5"
           style={{ background: INK, minHeight: "100%" }}
         >
-          {/* identity card */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1254,7 +1400,6 @@ function ProfilePage({ status }: { status: StatusKind }) {
             }}
           >
             <div className="flex items-start gap-4">
-              {/* avatar — built from grid cells, on-brand */}
               <div
                 className="relative flex-shrink-0"
                 style={{ width: 72, height: 72 }}
@@ -1299,13 +1444,13 @@ function ProfilePage({ status }: { status: StatusKind }) {
                   className="text-[20px] leading-tight"
                   style={{ fontFamily: "'Playfair Display', Georgia, serif", color: INK }}
                 >
-                  Hitha Setty
+                  {display} Setty
                 </div>
                 <div
                   className="text-[10px] tracking-wider opacity-60 mt-0.5"
                   style={{ fontFamily: "ui-monospace, monospace", color: INK }}
                 >
-                  bengaluru — creator
+                  {username || "@hitha"} — creator
                 </div>
               </div>
             </div>
@@ -1334,7 +1479,6 @@ function ProfilePage({ status }: { status: StatusKind }) {
             </div>
           </motion.div>
 
-          {/* connected accounts */}
           <div
             className="text-[8px] tracking-[0.3em] text-white/40 mb-2 px-1"
             style={{ fontFamily: "ui-monospace, monospace" }}
@@ -1355,10 +1499,7 @@ function ProfilePage({ status }: { status: StatusKind }) {
                   borderRadius: 12,
                 }}
               >
-                <div
-                  className="rounded"
-                  style={{ width: 16, height: 16, background: app.color, borderRadius: 4 }}
-                />
+                <AppLogo app={app} size={20} />
                 <div className="flex-1 min-w-0">
                   <div
                     className="text-[10px] tracking-[0.18em] font-semibold text-white"
@@ -1391,7 +1532,6 @@ function ProfilePage({ status }: { status: StatusKind }) {
             ))}
           </div>
 
-          {/* settings */}
           <div
             className="text-[8px] tracking-[0.3em] text-white/40 mb-2 px-1"
             style={{ fontFamily: "ui-monospace, monospace" }}
@@ -1399,12 +1539,13 @@ function ProfilePage({ status }: { status: StatusKind }) {
             SYSTEM // PREFERENCES
           </div>
           <div className="flex flex-col gap-1.5">
-            {settings.map(({ icon: Icon, label, meta }, i) => (
+            {settings.map(({ icon: Icon, label, meta, action }, i) => (
               <motion.button
                 key={label}
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.25 + i * 0.04, duration: 0.3 }}
+                onClick={action}
                 className="flex items-center gap-3 px-3 py-3 text-left"
                 style={{
                   background: "rgba(255,255,255,0.04)",
@@ -1437,12 +1578,344 @@ function ProfilePage({ status }: { status: StatusKind }) {
   );
 }
 
+/* ---------------- ONBOARDING ---------------- */
+
+function PulseLogo({ size = 96 }: { size?: number }) {
+  // animated logo built from grid cells — abstract beating "P" / pulse mark
+  const cells: Array<[number, number]> = [
+    [0, 0], [1, 0], [2, 0],
+    [0, 1], [3, 1],
+    [0, 2], [1, 2], [2, 2],
+    [0, 3],
+    [0, 4],
+  ];
+  const cellSize = Math.floor(size / 6);
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      {cells.map(([x, y], i) => (
+        <motion.div
+          key={`${x}-${y}`}
+          className="absolute"
+          style={{
+            left: x * (cellSize + 2),
+            top: y * (cellSize + 2),
+            width: cellSize,
+            height: cellSize,
+            background: PINK,
+            borderRadius: Math.max(2, cellSize / 4),
+          }}
+          animate={{ scale: [1, 1.12, 1] }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: ((i * 89) % 1000) / 1000,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function Onboarding({
+  initialStep,
+  initialUsername,
+  initialConnected,
+  onDone,
+}: {
+  initialStep: number;
+  initialUsername: string;
+  initialConnected: Set<string>;
+  onDone: (username: string, connected: Set<string>) => void;
+}) {
+  const [step, setStep] = useState(initialStep);
+  const [username, setUsername] = useState(initialUsername);
+  const [connected, setConnected] = useState<Set<string>>(initialConnected);
+
+  const toggle = (id: string) => {
+    setConnected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const next = () => {
+    if (step < 2) setStep(step + 1);
+    else onDone(username || "@hitha", connected);
+  };
+  const back = () => setStep(Math.max(0, step - 1));
+
+  const canContinue =
+    step === 0 ? true : step === 1 ? username.trim().length >= 2 : true;
+
+  return (
+    <div className="absolute inset-0 z-50" style={{ background: INK }}>
+      {/* progress dots */}
+      <div className="absolute top-12 left-0 right-0 flex justify-center gap-1.5 z-10">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="rounded-full transition-all"
+            style={{
+              width: i === step ? 22 : 6,
+              height: 6,
+              background: i <= step ? PINK : "rgba(255,255,255,0.15)",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* back arrow (steps 1+) */}
+      {step > 0 && (
+        <button
+          onClick={back}
+          className="absolute top-10 left-6 z-10 rounded-full flex items-center justify-center"
+          style={{
+            width: 32,
+            height: 32,
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+          }}
+          data-testid="onboarding-back"
+        >
+          <ArrowLeft className="w-4 h-4" strokeWidth={1.8} />
+        </button>
+      )}
+
+      {/* skip (step 0 only) */}
+      {step === 0 && (
+        <button
+          onClick={() => onDone("@hitha", new Set(APPS.map((a) => a.id)))}
+          className="absolute top-10 right-6 z-10 text-[10px] tracking-[0.2em] text-white/45"
+          style={{ fontFamily: "ui-monospace, monospace" }}
+          data-testid="onboarding-skip"
+        >
+          SKIP
+        </button>
+      )}
+
+      <AnimatePresence mode="wait">
+        {step === 0 && (
+          <motion.div
+            key="welcome"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35 }}
+            className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center"
+          >
+            <PulseLogo size={96} />
+            <div
+              className="text-[10px] tracking-[0.35em] text-white/45 mt-8 mb-3"
+              style={{ fontFamily: "ui-monospace, monospace" }}
+            >
+              WELCOME TO
+            </div>
+            <h1
+              className="text-white text-[56px] leading-none tracking-tight mb-4"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
+            >
+              <em style={{ fontStyle: "italic", fontWeight: 400 }}>Pulse.</em>
+            </h1>
+            <p
+              className="text-white/60 text-[14px] leading-snug lowercase max-w-[260px]"
+              style={{ fontFamily: "'Inter', sans-serif" }}
+            >
+              your creative pulse, every channel, in one quiet place.
+            </p>
+          </motion.div>
+        )}
+
+        {step === 1 && (
+          <motion.div
+            key="username"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35 }}
+            className="absolute inset-0 flex flex-col px-8 pt-32"
+          >
+            <div
+              className="text-[10px] tracking-[0.3em] text-white/40 mb-3"
+              style={{ fontFamily: "ui-monospace, monospace" }}
+            >
+              STEP 02 // IDENTITY
+            </div>
+            <h1
+              className="text-white text-[34px] leading-[1.05] tracking-tight mb-2"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
+            >
+              What should we{" "}
+              <em style={{ fontStyle: "italic", fontWeight: 400 }}>call you?</em>
+            </h1>
+            <p
+              className="text-white/55 text-[13px] mb-8 lowercase"
+              style={{ fontFamily: "'Inter', sans-serif" }}
+            >
+              this is how your operator profile will appear.
+            </p>
+
+            <div
+              className="flex items-center gap-2 px-4 py-3"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 14,
+              }}
+            >
+              <span
+                className="text-[16px] text-white/40"
+                style={{ fontFamily: "ui-monospace, monospace" }}
+              >
+                @
+              </span>
+              <input
+                type="text"
+                placeholder="yourhandle"
+                value={username.replace(/^@/, "")}
+                onChange={(e) => setUsername("@" + e.target.value.replace(/[^a-zA-Z0-9_.]/g, ""))}
+                className="bg-transparent outline-none text-white text-[16px] flex-1"
+                style={{ fontFamily: "ui-monospace, monospace" }}
+                autoFocus
+                data-testid="onboarding-username"
+              />
+            </div>
+
+            <div
+              className="text-[9px] tracking-[0.2em] text-white/35 mt-3"
+              style={{ fontFamily: "ui-monospace, monospace" }}
+            >
+              MIN 2 CHARS // LETTERS, NUMBERS, _ .
+            </div>
+          </motion.div>
+        )}
+
+        {step === 2 && (
+          <motion.div
+            key="connect"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35 }}
+            className="absolute inset-0 flex flex-col px-8 pt-28"
+          >
+            <div
+              className="text-[10px] tracking-[0.3em] text-white/40 mb-3"
+              style={{ fontFamily: "ui-monospace, monospace" }}
+            >
+              STEP 03 // CHANNELS
+            </div>
+            <h1
+              className="text-white text-[34px] leading-[1.05] tracking-tight mb-2"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
+            >
+              Connect your{" "}
+              <em style={{ fontStyle: "italic", fontWeight: 400 }}>channels.</em>
+            </h1>
+            <p
+              className="text-white/55 text-[13px] mb-6 lowercase"
+              style={{ fontFamily: "'Inter', sans-serif" }}
+            >
+              pick what you publish on. you can change this later.
+            </p>
+
+            <div className="flex flex-col gap-2">
+              {APPS.map((app) => {
+                const isOn = connected.has(app.id);
+                return (
+                  <motion.button
+                    key={app.id}
+                    onClick={() => toggle(app.id)}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-3 px-3 py-3 text-left transition-all"
+                    style={{
+                      background: isOn
+                        ? "rgba(229,185,185,0.12)"
+                        : "rgba(255,255,255,0.04)",
+                      border: `1px solid ${isOn ? PINK : "rgba(255,255,255,0.08)"}`,
+                      borderRadius: 14,
+                    }}
+                    data-testid={`onboarding-toggle-${app.id}`}
+                  >
+                    <AppLogo app={app} size={26} />
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className="text-[11px] tracking-[0.18em] font-semibold text-white"
+                        style={{ fontFamily: "ui-monospace, monospace" }}
+                      >
+                        {app.app}
+                      </div>
+                      <div
+                        className="text-[9px] tracking-wider text-white/50"
+                        style={{ fontFamily: "ui-monospace, monospace" }}
+                      >
+                        {app.handle}
+                      </div>
+                    </div>
+                    <div
+                      className="rounded-full flex items-center justify-center transition-all"
+                      style={{
+                        width: 22,
+                        height: 22,
+                        background: isOn ? PINK : "transparent",
+                        border: `1px solid ${isOn ? PINK : "rgba(255,255,255,0.25)"}`,
+                      }}
+                    >
+                      {isOn && <Check className="w-3 h-3" strokeWidth={3} color={INK} />}
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            <div
+              className="text-[9px] tracking-[0.2em] text-white/35 mt-4"
+              style={{ fontFamily: "ui-monospace, monospace" }}
+            >
+              {connected.size} OF {APPS.length} CONNECTED
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* CTA button */}
+      <div className="absolute left-0 right-0 bottom-10 px-8">
+        <motion.button
+          onClick={next}
+          disabled={!canContinue}
+          whileTap={canContinue ? { scale: 0.97 } : undefined}
+          className="w-full flex items-center justify-center gap-2 py-4 rounded-full transition-all"
+          style={{
+            background: canContinue ? CREAM : "rgba(255,255,255,0.08)",
+            color: canContinue ? INK : "rgba(255,255,255,0.3)",
+          }}
+          data-testid="onboarding-continue"
+        >
+          <span
+            className="text-[12px] tracking-[0.22em] font-semibold"
+            style={{ fontFamily: "ui-monospace, monospace" }}
+          >
+            {step === 0 ? "BEGIN" : step === 1 ? "CONTINUE" : "GET STARTED"}
+          </span>
+          <ArrowRight className="w-4 h-4" strokeWidth={2.2} />
+        </motion.button>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- ROOT ---------------- */
 
 export function Pulse() {
   const [activeNav, setActiveNav] = useState<NavKey>("home");
   const [engagementScore, setEngagementScore] = useState(85);
   const [status, setStatus] = useState<StatusKind>("live");
+  const [onboarded, setOnboarded] = useState(false);
+  const [onboardStep, setOnboardStep] = useState(0);
+  const [username, setUsername] = useState("@hitha");
+  const [connected, setConnected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -1464,6 +1937,22 @@ export function Pulse() {
     return () => clearInterval(t);
   }, []);
 
+  const handleOnboardDone = (u: string, c: Set<string>) => {
+    setUsername(u);
+    setConnected(c);
+    setOnboarded(true);
+  };
+
+  const replayOnboarding = () => {
+    setOnboardStep(0);
+    setOnboarded(false);
+  };
+
+  const openConnectStep = () => {
+    setOnboardStep(2);
+    setOnboarded(false);
+  };
+
   return (
     <div
       className="min-h-screen w-full flex items-center justify-center"
@@ -1473,25 +1962,47 @@ export function Pulse() {
         className="relative overflow-hidden"
         style={{ width: 390, height: 844, background: INK }}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeNav}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.25 }}
-            className="absolute inset-0"
-          >
-            {activeNav === "home" && (
-              <HomePage status={status} engagementScore={engagementScore} />
-            )}
-            {activeNav === "analytics" && <AnalyticsPage status={status} />}
-            {activeNav === "recent" && <RecentsPage status={status} />}
-            {activeNav === "profile" && <ProfilePage status={status} />}
-          </motion.div>
-        </AnimatePresence>
+        {!onboarded ? (
+          <Onboarding
+            initialStep={onboardStep}
+            initialUsername={username}
+            initialConnected={connected}
+            onDone={handleOnboardDone}
+          />
+        ) : (
+          <>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeNav}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.25 }}
+                className="absolute inset-0"
+              >
+                {activeNav === "home" && (
+                  <HomePage
+                    status={status}
+                    engagementScore={engagementScore}
+                    username={username}
+                    onAddChannel={openConnectStep}
+                  />
+                )}
+                {activeNav === "analytics" && <AnalyticsPage status={status} />}
+                {activeNav === "recent" && <RecentsPage status={status} />}
+                {activeNav === "profile" && (
+                  <ProfilePage
+                    status={status}
+                    username={username}
+                    onResetOnboarding={replayOnboarding}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
 
-        <BottomNav active={activeNav} setActive={setActiveNav} />
+            <BottomNav active={activeNav} setActive={setActiveNav} />
+          </>
+        )}
       </div>
     </div>
   );
